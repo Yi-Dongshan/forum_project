@@ -1,0 +1,27 @@
+<!-- templates/accounts/register.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}注册 - 我的论坛{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center">注册账号</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary btn-block">注册</button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <small>已有账号? <a href="{% url 'login' %}">登录</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+<!-- templates/notifications/notification_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}通知 - 我的论坛{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>我的通知 {% if unread_count %}<span class="badge badge-pill badge-danger">{{ unread_count }}</span>{% endif %}</h3>
+        {% if notifications %}
+            <a href="{% url 'mark_all_as_read' %}" class="btn btn-sm btn-primary">全部标为已读</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if notifications %}
+            <div class="list-group">
+                {% for notification in notifications %}
+                    <div class="list-group-item list-group-item-action {% if not notification.is_read %}notification-unread{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if notification.notification_type == 'comment' %}
+                                    <i class="fas fa-comment text-primary"></i> 新评论
+                                {% elif notification.notification_type == 'reply' %}
+                                    <i class="fas fa-reply text-info"></i> 评论回复
+                                {% elif notification.notification_type == 'like' %}
+                                    <i class="fas fa-heart text-danger"></i> 获得点赞
+                                {% elif notification.notification_type == 'mention' %}
+                                    <i class="fas fa-at text-warning"></i> 有人提及你
+                                {% else %}
+                                    <i class="fas fa-bell text-secondary"></i> 系统通知
+                                {% endif %}
+                            </h5>
+                            <small>{{ notification.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+
+                        <p class="mb-1">
+                            {% if notification.notification_type == 'comment' %}
+                                {{ notification.sender.username }} 在你的帖子 "{{ notification.post.title }}" 中发表了评论
+                            {% elif notification.notification_type == 'reply' %}
+                                {{ notification.sender.username }} 回复了你在帖子 "{{ notification.post.title }}" 中的评论
+                            {% elif notification.notification_type == 'like' %}
+                                {{ notification.sender.username }} 点赞了你的帖子 "{{ notification.post.title }}"
+                            {% elif notification.notification_type == 'mention' %}
+                                {{ notification.sender.username }} 在帖子 "{{ notification.post.title }}" 中提到了你
+                            {% else %}
+                                {{ notification.text }}
+                            {% endif %}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if notification.post %}
+                                    <a href="{% url 'post_detail' notification.post.id %}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                                {% endif %}
+
+                                {% if not notification.is_read %}
+                                    <a href="{% url 'mark_as_read' notification.id %}?next={% url 'notification_list' %}" class="btn btn-sm btn-outline-secondary">标为已读</a>
+                                {% endif %}
+                            </div>
+
+                            {% if not notification.is_read %}
+                                <span class="badge badge-pill badge-primary">未读</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">暂无通知</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

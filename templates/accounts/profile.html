@@ -1,0 +1,51 @@
+<!-- templates/accounts/profile.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ user.username }}的个人资料 - 我的论坛{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card profile-sidebar">
+            <div class="card-body text-center">
+                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                <h3>{{ user.username }}</h3>
+                <p class="text-muted">
+                    {% if user.profile.location %}
+                        <i class="fas fa-map-marker-alt"></i> {{ user.profile.location }}
+                    {% endif %}
+                </p>
+                <p>{{ user.profile.bio }}</p>
+                <p class="text-muted">加入时间: {{ user.date_joined|date:"Y年m月d日" }}</p>
+                <a href="{% url 'edit_profile' %}" class="btn btn-primary">编辑个人资料</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>我的帖子</h4>
+            </div>
+            <div class="card-body">
+                {% if user_posts %}
+                    <div class="list-group">
+                        {% for post in user_posts %}
+                            <a href="{% url 'post_detail' post.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ post.title }}</h5>
+                                    <small>{{ post.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-1">{{ post.content|truncatewords:20 }}</p>
+                                <small>评论: {{ post.comments.count }} · 点赞: {{ post.likes.count }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">您还没有发布过帖子。</p>
+                    <a href="{% url 'create_post' %}" class="btn btn-success">发布新帖子</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

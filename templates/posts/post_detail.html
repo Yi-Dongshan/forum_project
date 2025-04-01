@@ -1,0 +1,214 @@
+<!-- templates/posts/post_detail.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ post.title }} - 我的论坛{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-9">
+        <!-- 帖子内容 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>{{ post.title }}</h2>
+                <div class="post-meta">
+                    <span><i class="fas fa-user"></i> <a href="{% url 'user_profile' post.author.username %}">{{ post.author.username }}</a></span> |
+                    <span><i class="fas fa-folder"></i> <a href="{% url 'category_detail' post.category.id %}">{{ post.category.name }}</a></span> |
+                    <span><i class="fas fa-calendar-alt"></i> {{ post.created_at|date:"Y年m月d日 H:i" }}</span> |
+                    <span><i class="fas fa-eye"></i> {{ post.views }} 浏览</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="post-content">
+                    <div style="white-space: pre-wrap;">{{ post.content|safe }}</div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button id="likeButton" class="btn {% if user_liked %}btn-danger{% else %}btn-outline-danger{% endif %}" data-post-id="{{ post.id }}">
+                            <i class="fas fa-heart"></i> <span id="likeCount">{{ post.likes_count }}</span>
+                        </button>
+                    </div>
+                    {% if user == post.author or user.is_superuser %}
+                        <div>
+                            <a href="{% url 'update_post' post.pk %}" class="btn btn-outline-secondary">编辑</a>
+                            <a href="{% url 'delete_post' post.pk %}" class="btn btn-outline-danger">删除</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 评论区 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>评论 ({{ post.comments_count }})</h4>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <form method="POST" action="{% url 'add_comment' post.id %}">
+                            {% csrf_token %}
+                            {{ comment_form|crispy }}
+                            <button type="submit" class="btn btn-primary">发表评论</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        请<a href="{% url 'login' %}?next={{ request.path }}">登录</a>后发表评论
+                    </div>
+                {% endif %}
+
+                {% if comments %}
+                    <div id="comment-list">
+                        {% for comment in comments %}
+                            <div class="comment" id="comment-{{ comment.id }}">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <img src="{{ comment.author.profile.avatar.url }}" alt="{{ comment.author.username }}" class="rounded-circle" width="50" height="50">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <h5>{{ comment.author.username }}</h5>
+                                            <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
+                                        </div>
+                                        <p style="white-space: pre-wrap;">{{ comment.content }}</p>
+
+                                        {% if user.is_authenticated %}
+                                            <button class="btn btn-sm btn-link reply-button" data-comment-id="{{ comment.id }}">回复</button>
+
+                                            <div class="reply-form-container-{{ comment.id }}" style="display: none; margin: 10px 0;">
+                                                <form method="POST" action="{% url 'reply_comment' post.id comment.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="form-group">
+                                                        <textarea name="content" class="form-control" rows="2" required></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-primary">提交回复</button>
+                                                    <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{ comment.id }}">取消</button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- 回复评论 -->
+                                        {% for reply in comment.replies.all %}
+                                            <div class="comment-reply">
+                                                <div class="d-flex">
+                                                    <div class="mr-3">
+                                                        <img src="{{ reply.author.profile.avatar.url }}" alt="{{ reply.author.username }}" class="rounded-circle" width="40" height="40">
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <!-- 评论作者 -->
+                                                        <div class="d-flex justify-content-between">
+                                                            <h5><a href="{% url 'user_profile' comment.author.username %}">{{ comment.author.username }}</a></h5>
+                                                            <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
+                                                        </div>
+                                                        
+                                                        <!-- 回复作者 -->
+                                                        <div class="d-flex justify-content-between">
+                                                            <h6><a href="{% url 'user_profile' reply.author.username %}">{{ reply.author.username }}</a></h6>
+                                                            <small class="text-muted">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+                                                        </div>
+                                                        <p style="white-space: pre-wrap;">{{ reply.content }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}
+                                <hr>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">暂无评论，快来发表第一条评论吧！</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <!-- 作者信息 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>作者信息</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if post.author.profile.avatar %}
+                    <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}" 
+                         class="rounded-circle mb-3" width="100" height="100">
+                {% endif %}
+                <h5><a href="{% url 'user_profile' post.author.username %}">{{ post.author.username }}</a></h5>
+                {% if post.author.profile.bio %}
+                    <p>{{ post.author.profile.bio|truncatechars:100 }}</p>
+                {% endif %}
+                <p class="text-muted">帖子: {{ post.author.posts.count }}</p>
+            </div>
+        </div>
+
+        <!-- 相关帖子 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>相关帖子</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for related_post in post.category.posts.all|slice:":5" %}
+                        {% if related_post != post %}
+                            <a href="{% url 'post_detail' related_post.id %}" class="list-group-item list-group-item-action">
+                                {{ related_post.title }}
+                                <div class="small text-muted mt-1">
+                                    <i class="fas fa-user"></i> <a href="{% url 'user_profile' related_post.author.username %}">{{ related_post.author.username }}</a> |
+                                    <i class="fas fa-calendar-alt"></i> {{ related_post.created_at|date:"Y-m-d" }}
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% empty %}
+                        <p class="text-muted">该分类下暂无其他帖子</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 点赞功能
+    $('#likeButton').click(function() {
+        if (!{{ user.is_authenticated|yesno:"true,false" }}) {
+            window.location.href = "{% url 'login' %}?next={{ request.path }}";
+            return;
+        }
+
+        const postId = $(this).data('post-id');
+        $.ajax({
+            url: `/posts/${postId}/like/`,
+            type: 'GET',
+            success: function(data) {
+                $('#likeCount').text(data.likes_count);
+                if (data.liked) {
+                    $('#likeButton').removeClass('btn-outline-danger').addClass('btn-danger');
+                } else {
+                    $('#likeButton').removeClass('btn-danger').addClass('btn-outline-danger');
+                }
+            }
+        });
+    });
+
+    // 评论回复表单显示/隐藏
+    $('.reply-button').click(function() {
+        const commentId = $(this).data('comment-id');
+        $(`.reply-form-container-${commentId}`).show();
+    });
+
+    $('.cancel-reply').click(function() {
+        const commentId = $(this).data('comment-id');
+        $(`.reply-form-container-${commentId}`).hide();
+    });
+});
+</script>
+{% endblock %}

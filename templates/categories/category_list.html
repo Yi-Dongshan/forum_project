@@ -1,0 +1,44 @@
+<!-- templates/categories/category_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}分类列表 - 我的论坛{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">分类列表</h3>
+        {% if user.is_superuser %}
+            <a href="{% url 'create_category' %}" class="btn btn-primary btn-sm">添加分类</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if categories %}
+            <div class="list-group">
+                {% for category in categories %}
+                    <div class="list-group-item list-group-item-action category-list-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <h5 class="mb-1">
+                                    <a href="{% url 'category_detail' category.id %}">{{ category.name }}</a>
+                                </h5>
+                                <p class="mb-1">{{ category.description|truncatewords:20 }}</p>
+                            </div>
+                            <small>
+                                <span class="badge badge-primary">{{ category.post_count }}个帖子</span>
+                            </small>
+                        </div>
+                        {% if user.is_superuser %}
+                            <div class="mt-2">
+                                <a href="{% url 'update_category' category.id %}" class="btn btn-sm btn-outline-secondary">编辑</a>
+                                <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-outline-danger">删除</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">暂无分类</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
