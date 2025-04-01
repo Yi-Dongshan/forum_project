@@ -32,16 +32,27 @@
 ## 项目结构
 
 forum_project/
+
 ├── accounts/            # 用户账户管理应用
+
 ├── categories/          # 分类管理应用
+
 ├── forum_project/       # 项目核心配置
+
 ├── media/              # 用户上传的媒体文件
+
 ├── notifications/      # 通知系统应用
+
 ├── posts/              # 帖子管理应用
+
 ├── scripts/            # 实用脚本
+
 ├── static/             # 静态文件
+
 ├── templates/          # HTML模板
+
 ├── manage.py           # Django管理脚本
+
 └── requirements.txt    # 项目依赖
 
 ---
